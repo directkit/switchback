@@ -1188,26 +1188,37 @@ describe("history navigation", () => {
     global.fetch = originalFetch;
   });
 
-  it("should handle popstate event", async () => {
-    const storedPage: Page = {
+  it("should refetch the page on popstate and replace history", async () => {
+    const freshPage: Page = {
       component: 'Previous',
-      props: {},
+      props: { fresh: true },
       url: '/previous',
     };
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(freshPage),
+    });
+
+    const pushSpy = vi.spyOn(history, 'pushState');
 
     const app = newSwitchback({
       resolve: () => () => document.createElement('div'),
       setup: () => { },
     });
 
-    // Simulate popstate with stored page
+    // Simulate popstate with a stale stored page
     window.dispatchEvent(new PopStateEvent('popstate', {
-      state: { page: storedPage },
+      state: { page: { component: 'Previous', props: { fresh: false }, url: '/previous' } },
     }));
 
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    expect(app.page()).toEqual(storedPage);
+    expect(mockFetch).toHaveBeenCalledWith('/previous', expect.objectContaining({ method: 'GET' }));
+    expect(app.page()).toEqual(freshPage);
+    expect(pushSpy).not.toHaveBeenCalled();
+
+    pushSpy.mockRestore();
   });
 });
 
