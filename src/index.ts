@@ -230,7 +230,7 @@ export function newSwitchback(config: SwitchbackConfig): Switchback {
 
   function setupHistoryListener(): void {
     window.addEventListener('popstate', function onPopState(e) {
-      if (e.state?.page) swapPage(e.state.page, { preserveScroll: true });
+      if (e.state?.page) visit(e.state.page.url, { replace: true, preserveScroll: true });
     });
   }
 
