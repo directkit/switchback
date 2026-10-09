@@ -1195,9 +1195,11 @@ describe("history navigation", () => {
       url: '/previous',
     };
 
-    mockFetch.mockResolvedValueOnce({
+    // mockResolvedValue, not Once: every earlier test's instance also left a
+    // popstate listener on window, and each one fetches on this event too.
+    mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(freshPage),
+      json: async () => freshPage,
     });
 
     const pushSpy = vi.spyOn(history, 'pushState');
