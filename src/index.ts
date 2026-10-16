@@ -70,9 +70,14 @@ export function newSwitchback(config: SwitchbackConfig): Switchback {
         body: !isGet && options.data ? (options.data instanceof FormData ? options.data : JSON.stringify(options.data)) : undefined,
       });
 
+      if (response.status === 401) {
+        location.assign(isGet ? fetchUrl : location.href);
+        return;
+      }
+
       if (!response.ok) {
         options.onError?.(await response.json().catch(() => ({ message: 'Request failed' })));
-        return options.onFinish?.();
+        return;
       }
 
       const page: Page = await response.json();
