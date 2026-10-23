@@ -211,6 +211,15 @@ export function newSwitchback(config: SwitchbackConfig): Switchback {
 
   function setupInterceptors(): void {
     document.addEventListener('click', function onClick(e) {
+      if (
+        e.defaultPrevented ||
+        e.button !== 0 ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.altKey
+      ) return;
+
       const link = (e.target as HTMLElement).closest('a') as HTMLAnchorElement | null;
       if (!link || !shouldIntercept(link)) return;
       e.preventDefault();

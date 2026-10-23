@@ -833,6 +833,73 @@ describe("link interception", () => {
     expect(mockFetch).toHaveBeenCalled();
   });
 
+  it("should NOT intercept ctrl-clicks", async () => {
+    const mockPage: Page = {
+      component: 'Test',
+      props: {},
+      url: '/test',
+    };
+
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => mockPage,
+    });
+
+    const app = newSwitchback({
+      resolve: () => () => document.createElement('div'),
+      setup: () => { },
+    });
+
+    const link = document.createElement('a');
+    link.href = window.location.origin + '/test';
+    link.setAttribute('data-swbk', '');
+    document.body.appendChild(link);
+
+    const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
+    const preventDefaultSpy = vi.spyOn(clickEvent, 'preventDefault');
+
+    link.dispatchEvent(clickEvent);
+
+    // Wait for async fetch
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    expect(preventDefaultSpy).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("should NOT intercept clicks already handled", async () => {
+    const mockPage: Page = {
+      component: 'Test',
+      props: {},
+      url: '/test',
+    };
+
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => mockPage,
+    });
+
+    const app = newSwitchback({
+      resolve: () => () => document.createElement('div'),
+      setup: () => { },
+    });
+
+    const link = document.createElement('a');
+    link.href = window.location.origin + '/test';
+    link.setAttribute('data-swbk', '');
+    document.body.appendChild(link);
+
+    const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
+    link.addEventListener('click', function cancel(e) { e.preventDefault(); });
+
+    link.dispatchEvent(clickEvent);
+
+    // Wait for async fetch
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
   it("should NOT intercept links with target attribute", () => {
     const mockPage: Page = {
       component: 'Test',
